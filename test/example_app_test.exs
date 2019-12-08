@@ -59,22 +59,22 @@ defmodule ExampleAppTest do
            ] = project_managers = Repo.all(ProjectManager)
 
     assert [
-             %ExampleApp.ObjectTypes.ProjectManager{
-               user: %ExampleApp.Users.User{
+             %ProjectManager{
+               user: %User{
                  email: "user1@test.com",
                  wf_user_id: "5ba94a2a00854529705f809ebec755b9"
                },
                wf_user_id: "5ba94a2a00854529705f809ebec755b9"
              },
-             %ExampleApp.ObjectTypes.ProjectManager{
-               user: %ExampleApp.Users.User{
+             %ProjectManager{
+               user: %User{
                  email: "user2@test.com",
                  wf_user_id: "5b93028601bd041b925dc2067422be82"
                },
                wf_user_id: "5b93028601bd041b925dc2067422be82"
              },
-             %ExampleApp.ObjectTypes.ProjectManager{
-               user: %ExampleApp.Users.User{
+             %ProjectManager{
+               user: %User{
                  email: "user3@test.com",
                  wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
                },
