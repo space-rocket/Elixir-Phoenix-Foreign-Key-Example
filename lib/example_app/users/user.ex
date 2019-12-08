@@ -2,6 +2,7 @@ defmodule ExampleApp.Users.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key false
   schema "users" do
     field :email, :string
     field :wf_user_id, :string, primary_key: true
