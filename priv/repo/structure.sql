@@ -44,38 +44,11 @@ CREATE TABLE public.schema_migrations (
 --
 
 CREATE TABLE public.users (
-    id bigint NOT NULL,
     wf_user_id character varying(255) NOT NULL,
     email character varying(255),
     inserted_at timestamp(0) without time zone NOT NULL,
     updated_at timestamp(0) without time zone NOT NULL
 );
-
-
---
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.users_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
-
-
---
--- Name: users id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -99,7 +72,7 @@ ALTER TABLE ONLY public.schema_migrations
 --
 
 ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id, wf_user_id);
+    ADD CONSTRAINT users_pkey PRIMARY KEY (wf_user_id);
 
 
 --
@@ -107,13 +80,6 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE UNIQUE INDEX users_email_index ON public.users USING btree (email);
-
-
---
--- Name: users_wf_user_id_index; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX users_wf_user_id_index ON public.users USING btree (wf_user_id);
 
 
 --
