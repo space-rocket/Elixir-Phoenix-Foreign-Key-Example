@@ -15,7 +15,7 @@ defmodule ExampleApp.Users.User do
     user
     |> cast(attrs, [:wf_user_id, :email])
     |> validate_required([:wf_user_id, :email])
-    |> unique_constraint(:wf_user_id)
+    |> unique_constraint(:wf_user_id, name: "users_pkey")
     |> unique_constraint(:email)
   end
 end

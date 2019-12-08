@@ -19,6 +19,6 @@ defmodule ExampleApp.ObjectTypes.ProjectManager do
     project_manager
     |> cast(attrs, [])
     |> validate_required([:wf_user_id])
-    |> unique_constraint(:wf_user_id)
+    |> unique_constraint(:wf_user_id, name: "project_managers_pkey")
   end
 end
