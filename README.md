@@ -28,13 +28,13 @@ mix ecto.create
 mix phx.server
 ```
 
-### Pt 1: Add Users 
+### Add User Schema 
 
 ```bash
 mix phx.gen.schema Users.User users wf_user_id:string:unique email:string:unique 
 ```
 
-# Pt 2: Add Project Managers 
+### Add Project Manager Schema
 
 ```
 mix phx.gen.schema ObjectTypes.ProjectManager project_managers wf_user_id:references:users:unique
@@ -242,17 +242,84 @@ Test it out:
 iex -S mix
 ```
 
+
 ```bash
 users = Repo.all(from u in User)
 ```
+Outputs:
+```bash
+[debug] QUERY OK source="users" db=5.9ms decode=1.0ms queue=1.3ms
+SELECT u0."id", u0."email", u0."wf_user_id", u0."inserted_at", u0."updated_at" FROM "users" AS u0 []
+[
+  %ExampleApp.Users.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    email: "user1@test.com",
+    id: 1,
+    inserted_at: ~N[2019-12-08 08:00:10],
+    updated_at: ~N[2019-12-08 08:00:10],
+    wf_user_id: "5ba94a2a00854529705f809ebec755b9"
+  },
+  %ExampleApp.Users.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    email: "user2@test.com",
+    id: 2,
+    inserted_at: ~N[2019-12-08 08:00:10],
+    updated_at: ~N[2019-12-08 08:00:10],
+    wf_user_id: "5b93028601bd041b925dc2067422be82"
+  },
+  %ExampleApp.Users.User{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
+    email: "user3@test.com",
+    id: 3,
+    inserted_at: ~N[2019-12-08 08:00:10],
+    updated_at: ~N[2019-12-08 08:00:10],
+    wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
+  }
+]
+```
+
 
 ```bash
 project_manager = Repo.all(from p in ProjectManager)
 ```
 
+Outputs:
+```bash
+[debug] QUERY OK source="project_managers" db=1.4ms queue=1.4ms
+SELECT p0."id", p0."wf_user_id", p0."inserted_at", p0."updated_at" FROM "project_managers" AS p0 []
+[
+  %ExampleApp.ObjectTypes.ProjectManager{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
+    id: 1,
+    inserted_at: ~N[2019-12-08 08:00:11],
+    updated_at: ~N[2019-12-08 08:00:11],
+    user: #Ecto.Association.NotLoaded<association :user is not loaded>,
+    wf_user_id: "5ba94a2a00854529705f809ebec755b9"
+  },
+  %ExampleApp.ObjectTypes.ProjectManager{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
+    id: 2,
+    inserted_at: ~N[2019-12-08 08:00:11],
+    updated_at: ~N[2019-12-08 08:00:11],
+    user: #Ecto.Association.NotLoaded<association :user is not loaded>,
+    wf_user_id: "5b93028601bd041b925dc2067422be82"
+  },
+  %ExampleApp.ObjectTypes.ProjectManager{
+    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
+    id: 3,
+    inserted_at: ~N[2019-12-08 08:00:11],
+    updated_at: ~N[2019-12-08 08:00:11],
+    user: #Ecto.Association.NotLoaded<association :user is not loaded>,
+    wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
+  }
+]
+```
+
 ```bash
 project_manager = Repo.all(from p in ProjectManager, preload: [:user])
 ```
+
+Roh oh! 😱 What does `{:in, :id}` mean?
 
 ```sql
 iex(3)> project_manager = Repo.all(from p in ProjectManager, preload: [:user])
@@ -272,6 +339,7 @@ from u0 in ExampleApp.Users.User,
     (elixir) lib/enum.ex:1336: Enum."-map/2-lists^map/1-0-"/2
 ```
 
+This works though 💁
 
 ```bash
 q = from ProjectManager, where: [wf_user_id: "5b93028601bd041b925dc2067422be82"]
@@ -297,5 +365,57 @@ SELECT p0."id", p0."wf_user_id", p0."inserted_at", p0."updated_at" FROM "project
 ]
 ```
 
+## Users Table Output
+
+```sql
+                                         Table "public.users"
+   Column    |              Type              | Collation | Nullable |              Default              
+-------------+--------------------------------+-----------+----------+-----------------------------------
+ id          | bigint                         |           | not null | nextval('users_id_seq'::regclass)
+ wf_user_id  | character varying(255)         |           | not null | 
+ email       | character varying(255)         |           |          | 
+ inserted_at | timestamp(0) without time zone |           | not null | 
+ updated_at  | timestamp(0) without time zone |           | not null | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id, wf_user_id)
+    "users_email_index" UNIQUE, btree (email)
+    "users_wf_user_id_index" UNIQUE, btree (wf_user_id)
+Referenced by:
+    TABLE "project_managers" CONSTRAINT "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
+```
+
+```sql
+ id |            wf_user_id            |     email      |     inserted_at     |     updated_at      
+----+----------------------------------+----------------+---------------------+---------------------
+  1 | 5ba94a2a00854529705f809ebec755b9 | user1@test.com | 2019-12-08 08:00:10 | 2019-12-08 08:00:10
+  2 | 5b93028601bd041b925dc2067422be82 | user2@test.com | 2019-12-08 08:00:10 | 2019-12-08 08:00:10
+  3 | 5b89e3d300abc77aa4885e819fe3713d | user3@test.com | 2019-12-08 08:00:10 | 2019-12-08 08:00:10
+(3 rows)
+```
 
 
+## Project Managers Table Output
+
+```sql
+                                          Table "public.project_managers"
+   Column    |              Type              | Collation | Nullable |                   Default                    
+-------------+--------------------------------+-----------+----------+----------------------------------------------
+ id          | bigint                         |           | not null | nextval('project_managers_id_seq'::regclass)
+ wf_user_id  | character varying(255)         |           | not null | 
+ inserted_at | timestamp(0) without time zone |           | not null | 
+ updated_at  | timestamp(0) without time zone |           | not null | 
+Indexes:
+    "project_managers_pkey" PRIMARY KEY, btree (id, wf_user_id)
+    "project_managers_wf_user_id_index" UNIQUE, btree (wf_user_id)
+Foreign-key constraints:
+    "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
+```
+
+```sql
+ id |            wf_user_id            |     inserted_at     |     updated_at      
+----+----------------------------------+---------------------+---------------------
+  1 | 5ba94a2a00854529705f809ebec755b9 | 2019-12-08 08:00:11 | 2019-12-08 08:00:11
+  2 | 5b93028601bd041b925dc2067422be82 | 2019-12-08 08:00:11 | 2019-12-08 08:00:11
+  3 | 5b89e3d300abc77aa4885e819fe3713d | 2019-12-08 08:00:11 | 2019-12-08 08:00:11
+(3 rows)
+```
