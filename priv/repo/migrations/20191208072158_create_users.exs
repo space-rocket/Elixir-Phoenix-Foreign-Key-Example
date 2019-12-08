@@ -9,7 +9,6 @@ defmodule ExampleApp.Repo.Migrations.CreateUsers do
       timestamps()
     end
 
-    create unique_index(:users, [:wf_user_id])
     create unique_index(:users, [:email])
   end
 end
