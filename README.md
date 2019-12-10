@@ -336,6 +336,33 @@ Referenced by:
     TABLE "projects" CONSTRAINT "projects_owner_id_fkey" FOREIGN KEY (owner_id) REFERENCES project_managers(wf_user_id) ON DELETE CASCADE
 ```
 
+```sql
+example_app_dev=# SELECT * FROM users;
+     email      |            wf_user_id            |     inserted_at     |     updated_at      
+----------------+----------------------------------+---------------------+---------------------
+ user1@test.com | 5ba94a2a00854529705f809ebec755b9 | 2019-12-10 07:37:13 | 2019-12-10 07:37:13
+ user2@test.com | 5b93028601bd041b925dc2067422be82 | 2019-12-10 07:37:13 | 2019-12-10 07:37:13
+ user3@test.com | 5b89e3d300abc77aa4885e819fe3713d | 2019-12-10 07:37:13 | 2019-12-10 07:37:13
+(3 rows)
+
+example_app_dev=# SELECT * FROM projects;
+   name    |     inserted_at     |     updated_at      |             owner_id             
+-----------+---------------------+---------------------+----------------------------------
+ Project 1 | 2019-12-10 07:37:14 | 2019-12-10 07:37:14 | 5ba94a2a00854529705f809ebec755b9
+ Project 2 | 2019-12-10 07:37:14 | 2019-12-10 07:37:14 | 5b93028601bd041b925dc2067422be82
+ Project 3 | 2019-12-10 07:37:14 | 2019-12-10 07:37:14 | 5b89e3d300abc77aa4885e819fe3713d
+(3 rows)
+
+example_app_dev=# SELECT * FROM project_managers;
+            wf_user_id            |     inserted_at     |     updated_at      
+----------------------------------+---------------------+---------------------
+ 5ba94a2a00854529705f809ebec755b9 | 2019-12-10 07:37:14 | 2019-12-10 07:37:14
+ 5b93028601bd041b925dc2067422be82 | 2019-12-10 07:37:14 | 2019-12-10 07:37:14
+ 5b89e3d300abc77aa4885e819fe3713d | 2019-12-10 07:37:14 | 2019-12-10 07:37:14
+(3 rows)
+
+```
+
 Ref:
 [Docs: Ecto Schema has_many](https://hexdocs.pm/ecto/Ecto.Schema.html#has_many/3)
 
