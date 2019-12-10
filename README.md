@@ -229,6 +229,12 @@ mix ecto.migrate
 
 ## Add ProjectManager Association to Project Schema and Vis Versa
 
+
+
+**belongs_to**`:foreign_key` and the **has_many** `:foreign_key` should be set with the same value.
+
+`:references` - Sets the key on the other schema to be used for the association
+
 **lib/example_app/object_types/project.ex**
 ```elixir
 defmodule ExampleApp.ObjectTypes.Project do
@@ -243,7 +249,7 @@ defmodule ExampleApp.ObjectTypes.Project do
       foreign_key: :owner_id,
       type: :string,
       primary_key: true,
-      references: :wf_user_id
+      references: :owner_id
 
     timestamps()
   end
@@ -259,17 +265,21 @@ defmodule ExampleApp.ObjectTypes.Project do
 end
 ```
 
+`has_many` doesn't require you to set it primary key like `belongs_to` does. Thats because you have to add key its going to being using, ex: `field :owner_id, :string, primary_key: true`
+
 **lib/example_app/object_types/project_manager.ex**
 ```elixir
 defmodule ExampleApp.ObjectTypes.ProjectManager do
-  ...
+  use Ecto.Schema
+  import Ecto.Changeset
   alias ExampleApp.Users.User
   alias ExampleApp.ObjectTypes.Project
 
   @primary_key false
   schema "project_managers" do
+    field :owner_id, :string, primary_key: true
     has_many :projects, Project, 
-      foreign_key: :wf_user_id,
+      foreign_key: :owner_id,
       references: :owner_id
     belongs_to :user, User,
       foreign_key: :wf_user_id,
@@ -277,80 +287,40 @@ defmodule ExampleApp.ObjectTypes.ProjectManager do
       primary_key: true,
       references: :wf_user_id
 
-    ...
+    timestamps()
   end
 
   @doc false
   def changeset(project_manager, attrs) do
     project_manager
-    ...
-    # |> unique_constraint(:wf_user_id)
+    |> cast(attrs, [])
+    |> validate_required([])
     |> unique_constraint(:wf_user_id, name: "project_managers_pkey")
   end
 end
-
 ```
 
 ```bash
 mix ecto migrate
 ```
 
-😩 The has_many:
-```elixir
-    has_many :projects, Project, 
-      foreign_key: :wf_user_id,
-      references: :owner_id
-```
-
-Returns error:
-
-```elixir
-Compiling 1 file (.ex)
-
-== Compilation error in file lib/example_app/object_types/project_manager.ex ==
-** (ArgumentError) schema does not have the field :owner_id used by association :projects, please set the :references option accordingly
-    (ecto) lib/ecto/association.ex:552: Ecto.Association.Has.struct/3
-    (ecto) lib/ecto/schema.ex:1689: Ecto.Schema.association/5
-    (ecto) lib/ecto/schema.ex:1785: Ecto.Schema.__has_many__/4
-    lib/example_app/object_types/project_manager.ex:9: (module)
-    (stdlib) erl_eval.erl:680: :erl_eval.do_apply/6
-    (elixir) lib/kernel/parallel_compiler.ex:229: anonymous fn/4 in Kernel.ParallelCompiler.spawn_workers/7
-```
-
-Ref:
-[Docs: Ecto Schema has_many](https://hexdocs.pm/ecto/Ecto.Schema.html#has_many/3)
-
-
-Tables look this:
+😩 Error:
 
 ```sql
-example_app_dev=# \d users
-                             Table "public.users"
-   Column    |              Type              | Collation | Nullable | Default 
--------------+--------------------------------+-----------+----------+---------
- email       | character varying(255)         |           |          | 
- wf_user_id  | character varying(255)         |           | not null | 
- inserted_at | timestamp(0) without time zone |           | not null | 
- updated_at  | timestamp(0) without time zone |           | not null | 
-Indexes:
-    "users_pkey" PRIMARY KEY, btree (wf_user_id)
-    "users_email_index" UNIQUE, btree (email)
-Referenced by:
-    TABLE "project_managers" CONSTRAINT "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
+iex(2)> project_manager = Repo.all(from p in ProjectManager)
+[debug] QUERY ERROR source="project_managers" db=0.0ms queue=6.2ms
+SELECT p0."owner_id", p0."wf_user_id", p0."inserted_at", p0."updated_at" FROM "project_managers" AS p0 []
+** (Postgrex.Error) ERROR 42703 (undefined_column) column p0.owner_id does not exist
 
-example_app_dev=# \d projects
-                            Table "public.projects"
-   Column    |              Type              | Collation | Nullable | Default 
--------------+--------------------------------+-----------+----------+---------
- name        | character varying(255)         |           |          | 
- inserted_at | timestamp(0) without time zone |           | not null | 
- updated_at  | timestamp(0) without time zone |           | not null | 
- owner_id    | character varying(255)         |           | not null | 
-Indexes:
-    "projects_pkey" PRIMARY KEY, btree (owner_id)
-Foreign-key constraints:
-    "projects_owner_id_fkey" FOREIGN KEY (owner_id) REFERENCES project_managers(wf_user_id) ON DELETE CASCADE
+    query: SELECT p0."owner_id", p0."wf_user_id", p0."inserted_at", p0."updated_at" FROM "project_managers" AS p0
+    (ecto_sql) lib/ecto/adapters/sql.ex:629: Ecto.Adapters.SQL.raise_sql_call_error/1
+    (ecto_sql) lib/ecto/adapters/sql.ex:562: Ecto.Adapters.SQL.execute/5
+    (ecto) lib/ecto/repo/queryable.ex:177: Ecto.Repo.Queryable.execute/4
+    (ecto) lib/ecto/repo/queryable.ex:17: Ecto.Repo.Queryable.all/3
+```
 
+
+```sql
 example_app_dev=# \d project_managers
                         Table "public.project_managers"
    Column    |              Type              | Collation | Nullable | Default 
@@ -366,25 +336,8 @@ Referenced by:
     TABLE "projects" CONSTRAINT "projects_owner_id_fkey" FOREIGN KEY (owner_id) REFERENCES project_managers(wf_user_id) ON DELETE CASCADE
 ```
 
-
-
-
-
-
-## Customize iex
-
-**.iex.exs**
-```
-import_if_available Ecto.Query
-
-alias ExampleApp.{
-    Repo,
-    Users.User,
-    ObjectTypes,
-    ObjectTypes.Project,
-    ObjectTypes.ProjectManager
-}
-```
+Ref:
+[Docs: Ecto Schema has_many](https://hexdocs.pm/ecto/Ecto.Schema.html#has_many/3)
 
 ## Seed User table with Mock Data from JSON response
 
@@ -547,6 +500,54 @@ mix ecto.reset && mix run priv/repo/user-seeds.exs \
 && mix run priv/repo/project-seeds.exs
 ```
 
+## Customize iex
+
+**.iex.exs**
+```
+import_if_available Ecto.Query
+
+alias ExampleApp.{
+    Repo,
+    Users.User,
+    ObjectTypes,
+    ObjectTypes.Project,
+    ObjectTypes.ProjectManager
+}
+```
+
+Test it out:
+```bash
+iex -S mix
+```
+
+```bash
+users = Repo.all(from u in User)
+```
+
+```bash
+project_manager = Repo.all(from p in ProjectManager)
+```
+
+```bash
+project_manager = Repo.all(from p in ProjectManager, preload: :user)
+```
+
+```bash
+project_manager = Repo.all(from p in ProjectManager, preload: :projects)
+```
+
+```bash
+projects = Repo.all(from p in Project)
+```
+
+```bash
+projects = Repo.all(from p in Project, preload: :project_manager)
+```
+
+```bash
+q = from Project, where: [project_manager_id: 2]
+Repo.all(q)
+```
 
 
 https://hexdocs.pm/ecto/Ecto.Schema.html#belongs_to/3

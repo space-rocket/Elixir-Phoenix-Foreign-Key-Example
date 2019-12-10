@@ -24,30 +24,30 @@ data = [
     "project_manager_id" => 3,
     "ownerID" => "5b89e3d300abc77aa4885e819fe3713d"
   },
-  %{
-    "ID" => "5be47a96009c964a240ec2b57c0d256f",
-    "name" => "Project 4",
-    "project_manager_id" => nil,
-    "ownerID" => nil
-  },
-  %{
-    "ID" => "5c069ec7001875b512a47eec0ff81e99",
-    "name" => "Project 5",
-    "project_manager_id" => 2,
-    "ownerID" => "5b93028601bd041b925dc2067422be82"
-  }
+  # %{
+  #   "ID" => "5be47a96009c964a240ec2b57c0d256f",
+  #   "name" => "Project 4",
+  #   "project_manager_id" => nil,
+  #   "ownerID" => nil
+  # },
+  # %{
+  #   "ID" => "5c069ec7001875b512a47eec0ff81e99",
+  #   "name" => "Project 5",
+  #   "project_manager_id" => 2,
+  #   "ownerID" => "5b93028601bd041b925dc2067422be82"
+  # }
 ]
 
 Enum.each data, fn(project) ->
 
   name = Map.get(project, "name")
-  project_manager_id = Map.get(project, "project_manager_id")
-  wf_user_id = Map.get(project, "ownerID")
+  _project_manager_id = Map.get(project, "project_manager_id")
+  owner_id = Map.get(project, "ownerID")
 
   # Insert data into database
   Repo.insert! %Project{
     name: name,
-    project_manager_id: project_manager_id,
+    owner_id: owner_id,
     
   }
 end

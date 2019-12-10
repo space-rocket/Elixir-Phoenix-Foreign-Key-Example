@@ -6,9 +6,10 @@ defmodule ExampleApp.ObjectTypes.ProjectManager do
 
   @primary_key false
   schema "project_managers" do
+    field :owner_id, :string, primary_key: true
     has_many :projects, Project, 
       foreign_key: :owner_id,
-      references: :wf_user_id
+      references: :owner_id
     belongs_to :user, User,
       foreign_key: :wf_user_id,
       type: :string,

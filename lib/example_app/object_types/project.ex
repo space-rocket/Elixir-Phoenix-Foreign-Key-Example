@@ -10,7 +10,7 @@ defmodule ExampleApp.ObjectTypes.Project do
       foreign_key: :owner_id,
       type: :string,
       primary_key: true,
-      references: :wf_user_id
+      references: :owner_id
 
     timestamps()
   end
