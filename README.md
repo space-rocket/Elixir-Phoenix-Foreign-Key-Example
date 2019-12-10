@@ -295,7 +295,81 @@ end
 mix ecto migrate
 ```
 
-https://hexdocs.pm/ecto/Ecto.Schema.html#has_many/3
+😩 The has_many:
+```elixir
+    has_many :projects, Project, 
+      foreign_key: :wf_user_id,
+      references: :owner_id
+```
+
+Returns error:
+
+```elixir
+Compiling 1 file (.ex)
+
+== Compilation error in file lib/example_app/object_types/project_manager.ex ==
+** (ArgumentError) schema does not have the field :owner_id used by association :projects, please set the :references option accordingly
+    (ecto) lib/ecto/association.ex:552: Ecto.Association.Has.struct/3
+    (ecto) lib/ecto/schema.ex:1689: Ecto.Schema.association/5
+    (ecto) lib/ecto/schema.ex:1785: Ecto.Schema.__has_many__/4
+    lib/example_app/object_types/project_manager.ex:9: (module)
+    (stdlib) erl_eval.erl:680: :erl_eval.do_apply/6
+    (elixir) lib/kernel/parallel_compiler.ex:229: anonymous fn/4 in Kernel.ParallelCompiler.spawn_workers/7
+```
+
+Ref:
+[Docs: Ecto Schema has_many](https://hexdocs.pm/ecto/Ecto.Schema.html#has_many/3)
+
+
+Tables look this:
+
+```sql
+example_app_dev=# \d users
+                             Table "public.users"
+   Column    |              Type              | Collation | Nullable | Default 
+-------------+--------------------------------+-----------+----------+---------
+ email       | character varying(255)         |           |          | 
+ wf_user_id  | character varying(255)         |           | not null | 
+ inserted_at | timestamp(0) without time zone |           | not null | 
+ updated_at  | timestamp(0) without time zone |           | not null | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (wf_user_id)
+    "users_email_index" UNIQUE, btree (email)
+Referenced by:
+    TABLE "project_managers" CONSTRAINT "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
+
+example_app_dev=# \d projects
+                            Table "public.projects"
+   Column    |              Type              | Collation | Nullable | Default 
+-------------+--------------------------------+-----------+----------+---------
+ name        | character varying(255)         |           |          | 
+ inserted_at | timestamp(0) without time zone |           | not null | 
+ updated_at  | timestamp(0) without time zone |           | not null | 
+ owner_id    | character varying(255)         |           | not null | 
+Indexes:
+    "projects_pkey" PRIMARY KEY, btree (owner_id)
+Foreign-key constraints:
+    "projects_owner_id_fkey" FOREIGN KEY (owner_id) REFERENCES project_managers(wf_user_id) ON DELETE CASCADE
+
+example_app_dev=# \d project_managers
+                        Table "public.project_managers"
+   Column    |              Type              | Collation | Nullable | Default 
+-------------+--------------------------------+-----------+----------+---------
+ wf_user_id  | character varying(255)         |           | not null | 
+ inserted_at | timestamp(0) without time zone |           | not null | 
+ updated_at  | timestamp(0) without time zone |           | not null | 
+Indexes:
+    "project_managers_pkey" PRIMARY KEY, btree (wf_user_id)
+Foreign-key constraints:
+    "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
+Referenced by:
+    TABLE "projects" CONSTRAINT "projects_owner_id_fkey" FOREIGN KEY (owner_id) REFERENCES project_managers(wf_user_id) ON DELETE CASCADE
+```
+
+
+
+
+
 
 ## Customize iex
 
@@ -474,224 +548,6 @@ mix ecto.reset && mix run priv/repo/user-seeds.exs \
 ```
 
 
-          column: :wf_user_id,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Test it out:
-
-```bash
-iex -S mix
-```
-
-
-```bash
-users = Repo.all(from u in User)
-```
-Outputs:
-```bash
-[debug] QUERY OK source="users" db=5.9ms decode=1.0ms queue=1.3ms
-SELECT u0."id", u0."email", u0."wf_user_id", u0."inserted_at", u0."updated_at" FROM "users" AS u0 []
-[
-  %ExampleApp.Users.User{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-    email: "user1@test.com",
-    id: 1,
-    inserted_at: ~N[2019-12-08 08:00:10],
-    updated_at: ~N[2019-12-08 08:00:10],
-    wf_user_id: "5ba94a2a00854529705f809ebec755b9"
-  },
-  %ExampleApp.Users.User{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-    email: "user2@test.com",
-    id: 2,
-    inserted_at: ~N[2019-12-08 08:00:10],
-    updated_at: ~N[2019-12-08 08:00:10],
-    wf_user_id: "5b93028601bd041b925dc2067422be82"
-  },
-  %ExampleApp.Users.User{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-    email: "user3@test.com",
-    id: 3,
-    inserted_at: ~N[2019-12-08 08:00:10],
-    updated_at: ~N[2019-12-08 08:00:10],
-    wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
-  }
-]
-```
-
-
-```bash
-project_manager = Repo.all(from p in ProjectManager)
-```
-
-Outputs:
-```bash
-[debug] QUERY OK source="project_managers" db=1.4ms queue=1.4ms
-SELECT p0."id", p0."wf_user_id", p0."inserted_at", p0."updated_at" FROM "project_managers" AS p0 []
-[
-  %ExampleApp.ObjectTypes.ProjectManager{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
-    id: 1,
-    inserted_at: ~N[2019-12-08 08:00:11],
-    updated_at: ~N[2019-12-08 08:00:11],
-    user: #Ecto.Association.NotLoaded<association :user is not loaded>,
-    wf_user_id: "5ba94a2a00854529705f809ebec755b9"
-  },
-  %ExampleApp.ObjectTypes.ProjectManager{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
-    id: 2,
-    inserted_at: ~N[2019-12-08 08:00:11],
-    updated_at: ~N[2019-12-08 08:00:11],
-    user: #Ecto.Association.NotLoaded<association :user is not loaded>,
-    wf_user_id: "5b93028601bd041b925dc2067422be82"
-  },
-  %ExampleApp.ObjectTypes.ProjectManager{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
-    id: 3,
-    inserted_at: ~N[2019-12-08 08:00:11],
-    updated_at: ~N[2019-12-08 08:00:11],
-    user: #Ecto.Association.NotLoaded<association :user is not loaded>,
-    wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
-  }
-]
-```
-
-```bash
-project_manager = Repo.all(from p in ProjectManager, preload: [:user])
-```
-
-```sql
-iex(3)> project_manager = Repo.all(from p in ProjectManager, preload: [:user])
-[debug] QUERY OK source="project_managers" db=2.4ms
-SELECT p0."wf_user_id", p0."inserted_at", p0."updated_at" FROM "project_managers" AS p0 []
-[debug] QUERY OK source="users" db=1.6ms queue=2.2ms
-SELECT u0."email", u0."wf_user_id", u0."inserted_at", u0."updated_at", u0."wf_user_id" FROM "users" AS u0 WHERE (u0."wf_user_id" = ANY($1)) [["5b89e3d300abc77aa4885e819fe3713d", "5b93028601bd041b925dc2067422be82", "5ba94a2a00854529705f809ebec755b9"]]
-[
-  %ExampleApp.ObjectTypes.ProjectManager{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
-    inserted_at: ~N[2019-12-09 03:04:10],
-    updated_at: ~N[2019-12-09 03:04:10],
-    user: %ExampleApp.Users.User{
-      __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-      email: "user1@test.com",
-      inserted_at: ~N[2019-12-09 03:04:09],
-      updated_at: ~N[2019-12-09 03:04:09],
-      wf_user_id: "5ba94a2a00854529705f809ebec755b9"
-    },
-    wf_user_id: "5ba94a2a00854529705f809ebec755b9"
-  },
-  %ExampleApp.ObjectTypes.ProjectManager{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
-    inserted_at: ~N[2019-12-09 03:04:10],
-    updated_at: ~N[2019-12-09 03:04:10],
-    user: %ExampleApp.Users.User{
-      __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-      email: "user2@test.com",
-      inserted_at: ~N[2019-12-09 03:04:09],
-      updated_at: ~N[2019-12-09 03:04:09],
-      wf_user_id: "5b93028601bd041b925dc2067422be82"
-    },
-    wf_user_id: "5b93028601bd041b925dc2067422be82"
-  },
-  %ExampleApp.ObjectTypes.ProjectManager{
-    __meta__: #Ecto.Schema.Metadata<:loaded, "project_managers">,
-    inserted_at: ~N[2019-12-09 03:04:10],
-    updated_at: ~N[2019-12-09 03:04:10],
-    user: %ExampleApp.Users.User{
-      __meta__: #Ecto.Schema.Metadata<:loaded, "users">,
-      email: "user3@test.com",
-      inserted_at: ~N[2019-12-09 03:04:09],
-      updated_at: ~N[2019-12-09 03:04:09],
-      wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
-    },
-    wf_user_id: "5b89e3d300abc77aa4885e819fe3713d"
-  }
-]
-```
-
-## Users Table Output
-
-```sql
-                             Table "public.users"
-   Column    |              Type              | Collation | Nullable | Default 
--------------+--------------------------------+-----------+----------+---------
- wf_user_id  | character varying(255)         |           | not null | 
- email       | character varying(255)         |           |          | 
- inserted_at | timestamp(0) without time zone |           | not null | 
- updated_at  | timestamp(0) without time zone |           | not null | 
-Indexes:
-    "users_pkey" PRIMARY KEY, btree (wf_user_id)
-    "users_email_index" UNIQUE, btree (email)
-Referenced by:
-    TABLE "project_managers" CONSTRAINT "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
-```
-
-```sql
-            wf_user_id            |     email      |     inserted_at     |     updated_at      
-----------------------------------+----------------+---------------------+---------------------
- 5ba94a2a00854529705f809ebec755b9 | user1@test.com | 2019-12-09 03:04:09 | 2019-12-09 03:04:09
- 5b93028601bd041b925dc2067422be82 | user2@test.com | 2019-12-09 03:04:09 | 2019-12-09 03:04:09
- 5b89e3d300abc77aa4885e819fe3713d | user3@test.com | 2019-12-09 03:04:09 | 2019-12-09 03:04:09
-(3 rows)
-```
-
-
-## Project Managers Table Output
-
-```sql
-                        Table "public.project_managers"
-   Column    |              Type              | Collation | Nullable | Default 
--------------+--------------------------------+-----------+----------+---------
- wf_user_id  | character varying(255)         |           | not null | 
- inserted_at | timestamp(0) without time zone |           | not null | 
- updated_at  | timestamp(0) without time zone |           | not null | 
-Indexes:
-    "project_managers_pkey" PRIMARY KEY, btree (wf_user_id)
-Foreign-key constraints:
-    "project_managers_wf_user_id_fkey" FOREIGN KEY (wf_user_id) REFERENCES users(wf_user_id) ON DELETE CASCADE
-```
-
-```sql
-            wf_user_id            |     inserted_at     |     updated_at      
-----------------------------------+---------------------+---------------------
- 5ba94a2a00854529705f809ebec755b9 | 2019-12-09 03:04:10 | 2019-12-09 03:04:10
- 5b93028601bd041b925dc2067422be82 | 2019-12-09 03:04:10 | 2019-12-09 03:04:10
- 5b89e3d300abc77aa4885e819fe3713d | 2019-12-09 03:04:10 | 2019-12-09 03:04:10
-(3 rows)
-```
 
 https://hexdocs.pm/ecto/Ecto.Schema.html#belongs_to/3
 

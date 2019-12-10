@@ -2,9 +2,13 @@ defmodule ExampleApp.ObjectTypes.ProjectManager do
   use Ecto.Schema
   import Ecto.Changeset
   alias ExampleApp.Users.User
+  alias ExampleApp.ObjectTypes.Project
 
   @primary_key false
   schema "project_managers" do
+    has_many :projects, Project, 
+      foreign_key: :owner_id,
+      references: :wf_user_id
     belongs_to :user, User,
       foreign_key: :wf_user_id,
       type: :string,
