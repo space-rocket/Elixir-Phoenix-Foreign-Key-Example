@@ -13,9 +13,9 @@ defmodule ExampleApp.Users.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:wf_user_id, :email])
-    |> validate_required([:wf_user_id, :email])
-    |> unique_constraint(:wf_user_id, name: "users_pkey")
+    |> cast(attrs, [:email, :wf_user_id])
+    |> validate_required([:email, :wf_user_id])
     |> unique_constraint(:email)
+    |> unique_constraint(:wf_user_id, name: "users_pkey")
   end
 end

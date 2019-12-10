@@ -18,7 +18,7 @@ defmodule ExampleApp.ObjectTypes.ProjectManager do
   def changeset(project_manager, attrs) do
     project_manager
     |> cast(attrs, [])
-    |> validate_required([:wf_user_id])
+    |> validate_required([])
     |> unique_constraint(:wf_user_id, name: "project_managers_pkey")
   end
 end

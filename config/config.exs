@@ -13,7 +13,7 @@ config :example_app,
 # Configures the endpoint
 config :example_app, ExampleAppWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "x4X9a0QURluvpLs7vpAfSlnmkm1zJRP5n4nqj9PH1t8TJJjDsIq5OuQ4YEnYAI8T",
+  secret_key_base: "gnxmnNGsvIRmAGF3/odjWSCD3OJYDMRhseXKZLE6J+Ra6B8z0pipJVZjDcU+7e1C",
   render_errors: [view: ExampleAppWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: ExampleApp.PubSub, adapter: Phoenix.PubSub.PG2]
 
